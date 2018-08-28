@@ -15,6 +15,8 @@
 #define TEMP_HUMID_TYPE DHT22
 #define TEMP_HUMID_SENSOR 22
 #define VIBRATION_SENSOR 23
+#define DISTANCE_TRIGGER 24
+#define DISTANCE_ECHO 25
 
 #define RFID_RST_PIN 49
 #define RFID_SS_PIN 53
@@ -43,6 +45,10 @@ void setupVibrationSensor();
 
 void readVibration();
 
+void setupDistanceSensor();
+
+void readDistance();
+
 void setup() {
     Serial.begin(9600);
     while (!Serial) {
@@ -68,7 +74,8 @@ void setupLeds() {
 void setupSensors() {
     //setupLiquidSensor();
     //setupTemperatureAndHumiditySensor();
-    setupVibrationSensor();
+    //setupVibrationSensor();
+    setupDistanceSensor();
 }
 
 void setupLiquidSensor() { pinMode(LIQUID_SENSOR, INPUT); }
@@ -82,6 +89,11 @@ void setupTemperatureAndHumiditySensor() {
 
 void setupVibrationSensor() {
     pinMode(VIBRATION_SENSOR, INPUT);
+}
+
+void setupDistanceSensor() {
+    pinMode(DISTANCE_TRIGGER, OUTPUT);
+    pinMode(DISTANCE_ECHO, INPUT);
 }
 
 void setupRfidReader() {
@@ -101,6 +113,7 @@ void readSensors() {
     //readLiquidLevel();
     //readTemperatureAndHumidity();
     //readVibration();
+    //readDistance();
 }
 
 void readLiquidLevel() {
@@ -143,6 +156,20 @@ void readVibration() {
     int vibrationDetected = digitalRead(VIBRATION_SENSOR);
     Serial.print("Vibration detected = ");
     Serial.println(vibrationDetected == 1);
+}
+
+void readDistance() {
+    digitalWrite(DISTANCE_TRIGGER, LOW);
+    delayMicroseconds(2);
+    digitalWrite(DISTANCE_TRIGGER, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(DISTANCE_TRIGGER, LOW);
+
+    unsigned long pulseLength = pulseIn(DISTANCE_ECHO, HIGH);
+    unsigned long distance = pulseLength * 340 / 2 / 1000;
+    Serial.print("distance = ");
+    Serial.print(distance);
+    Serial.println("mm");
 }
 
 void readRfid() {
