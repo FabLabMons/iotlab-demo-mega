@@ -14,6 +14,7 @@
 #define LIQUID_SENSOR A0
 #define TEMP_HUMID_TYPE DHT22
 #define TEMP_HUMID_SENSOR 22
+#define VIBRATION_SENSOR 23
 
 #define RFID_RST_PIN 49
 #define RFID_SS_PIN 53
@@ -22,16 +23,25 @@ MFRC522 rfid(RFID_SS_PIN, RFID_RST_PIN);  // Create MFRC522 instance
 byte rfidUid[4];
 
 DHT_Unified dht(TEMP_HUMID_SENSOR, TEMP_HUMID_TYPE);
-uint32_t delayMS;
+uint32_t dhtDelayMs;
+uint32_t dhtLastMeasureMs;
 
 void setupLeds();
 void setupSensors();
 void setupRfidReader();
+void setupTemperatureAndHumiditySensor();
+void setupLiquidSensor();
 
 void readSensors();
+void readLiquidLevel();
+void readTemperatureAndHumidity();
+void printHex(byte *buffer, byte bufferSize);
+
 void readRfid();
 
-void printHex(byte *buffer, byte bufferSize);
+void setupVibrationSensor();
+
+void readVibration();
 
 void setup() {
     Serial.begin(9600);
@@ -56,8 +66,22 @@ void setupLeds() {
 }
 
 void setupSensors() {
-    pinMode(LIQUID_SENSOR, INPUT);
+    //setupLiquidSensor();
+    //setupTemperatureAndHumiditySensor();
+    setupVibrationSensor();
+}
+
+void setupLiquidSensor() { pinMode(LIQUID_SENSOR, INPUT); }
+
+void setupTemperatureAndHumiditySensor() {
     dht.begin();
+    sensor_t sensor;
+    dht.humidity().getSensor(&sensor);
+    dhtDelayMs = sensor.min_delay / 1000;
+}
+
+void setupVibrationSensor() {
+    pinMode(VIBRATION_SENSOR, INPUT);
 }
 
 void setupRfidReader() {
@@ -70,14 +94,26 @@ void loop() {
 
     //readRfid();
 
-    delay(2000);
+    delay(1000);
 }
 
 void readSensors() {
+    //readLiquidLevel();
+    //readTemperatureAndHumidity();
+    //readVibration();
+}
+
+void readLiquidLevel() {
     int liquidLevel = analogRead(LIQUID_SENSOR);
 
     Serial.print("liquid level=");
     Serial.println(liquidLevel);
+}
+
+void readTemperatureAndHumidity() {
+    if ((millis() - dhtLastMeasureMs) < dhtDelayMs) {
+        return;
+    }
 
     sensors_event_t event;
     dht.temperature().getEvent(&event);
@@ -99,6 +135,14 @@ void readSensors() {
         Serial.print(event.relative_humidity);
         Serial.println("%");
     }
+
+    dhtLastMeasureMs = millis();
+}
+
+void readVibration() {
+    int vibrationDetected = digitalRead(VIBRATION_SENSOR);
+    Serial.print("Vibration detected = ");
+    Serial.println(vibrationDetected == 1);
 }
 
 void readRfid() {
