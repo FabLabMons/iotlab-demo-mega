@@ -2,22 +2,19 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-static const uint8_t ledLiving1 = 2;
-static const uint8_t ledLiving2 = 3;
-static const uint8_t ledBedroom = 4;
-static const uint8_t ledBathroom = 5;
-static const uint8_t ledKitchen = 6;
+#define LED_SALON 2
+#define LED_EATING_ROOM 3
+#define LED_BEDROOM 4
+#define LED_BATHROOM 5
+#define LED_KITCHEN 6
 
-static const int liquidSensor = A0;
+#define LIQUID_SENSOR A0
 
-static const uint8_t rfidRST = 22;
-static const uint8_t rfidSS = 23;
+#define RFID_RST_PIN 49
+#define RFID_SS_PIN 53
 
-#define RST_PIN         9          // Configurable, see typical pin layout above
-#define SS_PIN          10         // Configurable, see typical pin layout above
-
-MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
-byte nuidPICC[4];
+MFRC522 rfid(RFID_SS_PIN, RFID_RST_PIN);  // Create MFRC522 instance
+byte rfidUid[4];
 
 void setupLeds();
 void setupSensors();
@@ -41,15 +38,15 @@ void setup() {
 }
 
 void setupLeds() {
-    pinMode(ledLiving1, OUTPUT);
-    pinMode(ledLiving2, OUTPUT);
-    pinMode(ledBedroom, OUTPUT);
-    pinMode(ledBathroom, OUTPUT);
-    pinMode(ledKitchen, OUTPUT);
+    pinMode(LED_SALON, OUTPUT);
+    pinMode(LED_EATING_ROOM, OUTPUT);
+    pinMode(LED_BEDROOM, OUTPUT);
+    pinMode(LED_BATHROOM, OUTPUT);
+    pinMode(LED_KITCHEN, OUTPUT);
 }
 
 void setupSensors() {
-    pinMode(liquidSensor, INPUT);
+    pinMode(LIQUID_SENSOR, INPUT);
 }
 
 void printHex(byte *buffer, byte bufferSize) {
@@ -84,7 +81,7 @@ void loop() {
 }
 
 void readSensors() {
-    int liquidLevel = analogRead(liquidSensor);
+    int liquidLevel = analogRead(LIQUID_SENSOR);
 
     Serial.print("liquid level=");
     Serial.println(liquidLevel);
@@ -107,14 +104,14 @@ void readRfid() {
         return;
     }
 
-    if (rfid.uid.uidByte[0] != nuidPICC[0] ||
-        rfid.uid.uidByte[1] != nuidPICC[1] ||
-        rfid.uid.uidByte[2] != nuidPICC[2] ||
-        rfid.uid.uidByte[3] != nuidPICC[3] ) {
+    if (rfid.uid.uidByte[0] != rfidUid[0] ||
+        rfid.uid.uidByte[1] != rfidUid[1] ||
+        rfid.uid.uidByte[2] != rfidUid[2] ||
+        rfid.uid.uidByte[3] != rfidUid[3] ) {
         Serial.println(F("A new card has been detected."));
 
         for (byte i = 0; i < 4; i++) {
-            nuidPICC[i] = rfid.uid.uidByte[i];
+            rfidUid[i] = rfid.uid.uidByte[i];
         }
 
         Serial.println(F("The NUID tag is:"));
